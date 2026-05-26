@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웨이팅 및 테이블 배정 시스템 - 프로토타입</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary-accent: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --glass-blur: blur(12px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+            background-image: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+        }
+
+        /* Glassmorphism Panel */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Customer Kiosk Section --- */
+        .customer-section {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"], input[type="number"] {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: var(--primary-accent);
+        }
+
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 10px;
+            justify-content: space-between;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+        .btn-icon:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .btn-primary {
+            background: var(--primary-accent);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 1rem;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* --- Manager Dashboard Section --- */
+        .manager-section {
+            flex: 2.5;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Waiting List */
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+            padding-right: 0.5rem;
+        }
+
+        .waiting-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .waiting-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .wait-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-accent);
+        }
+        
+        .wait-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn-sm:hover { opacity: 0.8; }
+        
+        .btn-call { background: var(--primary-accent); }
+        .btn-enter { background: var(--success); }
+        .btn-noshow { background: var(--warning); }
+        .btn-cancel { background: var(--danger); }
+
+        /* Tables Map */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .table-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .table-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .table-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid;
+        }
+
+        /* Status Colors */
+        .status-available .table-icon { border-color: var(--success); color: var(--success); }
+        .status-occupied .table-icon { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); color: white; }
+        .status-cleaning .table-icon { border-color: var(--warning); background: rgba(245, 158, 11, 0.2); color: white; }
+
+        .table-info {
+            text-align: center;
+        }
+        .table-name { font-weight: 600; margin-bottom: 0.2rem; }
+        .table-status { font-size: 0.8rem; color: var(--text-secondary); }
+        .table-capacity { font-size: 0.75rem; color: #64748b; margin-top: 0.2rem; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            body { flex-direction: column; }
+            .customer-section { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Customer Kiosk (웨이팅 등록) -->
+    <div class="glass-panel customer-section">
+        <h2>📱 고객 웨이팅 등록</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">매장 입구에 비치된 태블릿 화면</p>
+        
+        <div class="input-group" style="margin-top: 1rem;">
+            <label>연락처 (Phone)</label>
+            <input type="text" placeholder="010-0000-0000" id="phoneInput">
+        </div>
+
+        <div class="input-group">
+            <label>방문 인원 (Party Size)</label>
+            <div class="counter">
+                <button class="btn-icon" onclick="updateCount(-1)">-</button>
+                <span id="partySize" style="font-size: 1.2rem; font-weight: 600;">2</span> 명
+                <button class="btn-icon" onclick="updateCount(1)">+</button>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="registerWaiting()">웨이팅 등록하기</button>
+        
+        <div id="registerSuccess" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.2); border-radius: 10px; border: 1px solid var(--success); text-align: center;">
+            <p style="color: #34d399; font-weight: 600;">등록 완료!</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">대기번호: <span style="color:white">No. 14</span><br>내 앞 대기: 2팀</p>
+        </div>
+    </div>
+
+    <!-- 2. Manager Dashboard (대시보드) -->
+    <div class="glass-panel manager-section">
+        
+        <!-- 대기 목록 -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <h2>📋 대기 목록 관리</h2>
+            <div class="list-container" id="waitingList">
+                <!-- Item 1 -->
+                <div class="waiting-item">
+                    <div class="item-header">
+                        <div>
+                            <div class="wait-number">No. 12</div>
+                            <div style="font-size: 0.9rem; margin-top: 0.3rem;">010-1234-5678 (3명)</div>
+                        </div>
+                        <div class="wait-info">대기 15분째<br><span style="color: var(--warning)">호출 1회</span></div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-sm btn-call" onclick="alert('고객을 호출했습니다.')">호출</button>
+                        <button class="btn-sm btn-enter" onclick="alert('입장 처리하여 테이블을 배정합니다.')">입장 배정</button>
+                        <button class="btn-sm btn-noshow" onclick="removeItem(this)">노쇼</button>
+                        <button class="btn-sm btn-cancel" onclick="removeItem(this)">취소</button>
+                    </div>
+                    <div class="badge">추천 테이블: T2 (4인석)</div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="waiting-item">
+                    <div class="item-header">
+                        <div>
+                            <div class="wait-number">No. 13</div>
+                            <div style="font-size: 0.9rem; margin-top: 0.3rem;">010-9876-5432 (2명)</div>
+                        </div>
+                        <div class="wait-info">대기 5분째</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-sm btn-call" onclick="alert('고객을 호출했습니다.')">호출</button>
+                        <button class="btn-sm btn-enter" onclick="alert('입장 처리하여 테이블을 배정합니다.')">입장 배정</button>
+                        <button class="btn-sm btn-noshow" onclick="removeItem(this)">노쇼</button>
+                        <button class="btn-sm btn-cancel" onclick="removeItem(this)">취소</button>
+                    </div>
+                    <div class="badge">추천 테이블: T1 (2인석)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 테이블 상태 관리 -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <h2>🍽️ 테이블 상태 관리</h2>
+            <div class="tables-grid">
+                
+                <!-- Table 1 -->
+                <div class="table-card status-available" onclick="toggleTableStatus(this)">
+                    <div class="table-icon">T1</div>
+                    <div class="table-info">
+                        <div class="table-name">테이블 1</div>
+                        <div class="table-capacity">2인석</div>
+                        <div class="table-status">빈 자리 (입장 가능)</div>
+                    </div>
+                </div>
+
+                <!-- Table 2 -->
+                <div class="table-card status-occupied" onclick="toggleTableStatus(this)">
+                    <div class="table-icon">T2</div>
+                    <div class="table-info">
+                        <div class="table-name">테이블 2</div>
+                        <div class="table-capacity">4인석</div>
+                        <div class="table-status">식사 중 (No. 10)</div>
+                    </div>
+                </div>
+
+                <!-- Table 3 -->
+                <div class="table-card status-cleaning" onclick="toggleTableStatus(this)">
+                    <div class="table-icon">T3</div>
+                    <div class="table-info">
+                        <div class="table-name">테이블 3</div>
+                        <div class="table-capacity">4인석</div>
+                        <div class="table-status">정리 중</div>
+                    </div>
+                </div>
+
+                <!-- Table 4 -->
+                <div class="table-card status-available" onclick="toggleTableStatus(this)">
+                    <div class="table-icon">T4</div>
+                    <div class="table-info">
+                        <div class="table-name">테이블 4</div>
+                        <div class="table-capacity">6인석 (단체)</div>
+                        <div class="table-status">빈 자리 (입장 가능)</div>
+                    </div>
+                </div>
+
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">
+                * 테이블 카드를 클릭하면 상태가 변경됩니다 (빈자리 -> 식사중 -> 정리중 -> 빈자리)
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // 간단한 UI 상호작용 스크립트
+        let count = 2;
+        function updateCount(change) {
+            count += change;
+            if (count < 1) count = 1;
+            if (count > 10) count = 10;
+            document.getElementById('partySize').innerText = count;
+        }
+
+        function registerWaiting() {
+            const phone = document.getElementById('phoneInput').value;
+            if(!phone) {
+                alert("연락처를 입력해주세요.");
+                return;
+            }
+            document.getElementById('registerSuccess').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('registerSuccess').style.display = 'none';
+                document.getElementById('phoneInput').value = '';
+                count = 2;
+                document.getElementById('partySize').innerText = count;
+                
+                // 대기열에 추가하는 효과
+                addToList(phone, count);
+            }, 2500);
+        }
+
+        function addToList(phone, count) {
+            const list = document.getElementById('waitingList');
+            const newItem = document.createElement('div');
+            newItem.className = 'waiting-item';
+            newItem.innerHTML = `
+                <div class="item-header">
+                    <div>
+                        <div class="wait-number">No. 14</div>
+                        <div style="font-size: 0.9rem; margin-top: 0.3rem;">${phone} (${count}명)</div>
+                    </div>
+                    <div class="wait-info">방금 전</div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-sm btn-call" onclick="alert('고객을 호출했습니다.')">호출</button>
+                    <button class="btn-sm btn-enter" onclick="alert('입장 처리하여 테이블을 배정합니다.')">입장 배정</button>
+                    <button class="btn-sm btn-noshow" onclick="removeItem(this)">노쇼</button>
+                    <button class="btn-sm btn-cancel" onclick="removeItem(this)">취소</button>
+                </div>
+                <div class="badge">추천 테이블: T4</div>
+            `;
+            list.appendChild(newItem);
+        }
+
+        function removeItem(btn) {
+            const item = btn.closest('.waiting-item');
+            item.style.opacity = '0';
+            setTimeout(() => item.remove(), 200);
+        }
+
+        function toggleTableStatus(card) {
+            const statusDiv = card.querySelector('.table-status');
+            if (card.classList.contains('status-available')) {
+                card.classList.remove('status-available');
+                card.classList.add('status-occupied');
+                statusDiv.innerText = '식사 중';
+            } else if (card.classList.contains('status-occupied')) {
+                card.classList.remove('status-occupied');
+                card.classList.add('status-cleaning');
+                statusDiv.innerText = '정리 중';
+            } else {
+                card.classList.remove('status-cleaning');
+                card.classList.add('status-available');
+                statusDiv.innerText = '빈 자리 (입장 가능)';
+            }
+        }
+    </script>
+</body>
+</html>
