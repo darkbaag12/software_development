@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> waiting: 웨이팅 등록
+    waiting --> called: 고객 호출
+    waiting --> cancelled: 웨이팅 취소
+    called --> seated: 입장 처리
+    called --> cancelled: 호출 후 취소
+    called --> no_show: 노쇼 처리
+    seated --> [*]
+    cancelled --> [*]
+    no_show --> [*]
