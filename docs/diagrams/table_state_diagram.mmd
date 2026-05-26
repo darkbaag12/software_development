@@ -1,0 +1,6 @@
+stateDiagram-v2
+    [*] --> available: 테이블 등록
+    available --> occupied: 고객 입장
+    occupied --> cleaning: 식사 종료
+    cleaning --> available: 청소 완료
+    available --> [*]: 테이블 삭제

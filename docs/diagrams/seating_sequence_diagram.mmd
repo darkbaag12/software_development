@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor Staff as 직원
+    participant UI as 화면
+    participant Waiting as WaitingService
+    participant Table as TableService
+
+    Staff->>UI: called 고객 선택
+    UI->>Table: 추천 테이블 요청(partySize)
+    Table-->>UI: available 테이블 중 추천 결과 반환
+    Staff->>UI: 테이블 배정 확정
+    UI->>Waiting: 고객 상태 seated로 변경
+    UI->>Table: 테이블 상태 occupied로 변경
+    UI-->>Staff: 입장 처리 완료 표시

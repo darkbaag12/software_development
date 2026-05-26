@@ -1,0 +1,35 @@
+classDiagram
+    class Customer {
+        +id: string
+        +name: string
+        +phone: string
+        +partySize: number
+    }
+
+    class WaitingEntry {
+        +id: string
+        +waitingNumber: number
+        +status: WaitingStatus
+        +requestNote: string
+        +createdAt: Date
+        +calledAt: Date
+        +seatedAt: Date
+    }
+
+    class RestaurantTable {
+        +id: string
+        +tableNumber: string
+        +capacity: number
+        +status: TableStatus
+    }
+
+    class TableAssignment {
+        +id: string
+        +waitingEntryId: string
+        +tableId: string
+        +assignedAt: Date
+    }
+
+    Customer "1" --> "0..*" WaitingEntry
+    WaitingEntry "0..1" --> "1" TableAssignment
+    RestaurantTable "1" --> "0..*" TableAssignment
