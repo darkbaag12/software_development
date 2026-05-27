@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음식점 예약 및 웨이팅 관리 시스템</title>
+    <!-- Outfit & Inter Google Fonts for high-end typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app-container">
+
+        <!-- ======================================================= -->
+        <!-- SCREEN 1: LANDING PAGE (초기 진입 화면)                 -->
+        <!-- ======================================================= -->
+        <div id="landing-screen" class="screen">
+            <div class="glass-panel landing-panel">
+                <div class="landing-title-group">
+                    <h1>🍽️ 음식점 예약 및 웨이팅 관리 시스템</h1>
+                    <p>정확한 요구 모델링에 입각하여 설계된 프리미엄 스마트 대기 및 테이블 관리 솔루션입니다.</p>
+                </div>
+
+                <div class="landing-nav-grid">
+                    <!-- 고객용 키오스크 버튼 -->
+                    <div class="nav-card" onclick="showScreen('kiosk-screen')">
+                        <div class="nav-icon">📱</div>
+                        <div class="nav-info">
+                            <h3>고객 웨이팅 등록</h3>
+                            <p>방문하신 고객이 대기번호를 발급받고 대기 현황을 확인하는 전용 키오스크 화면입니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 직원용 대시보드 버튼 -->
+                    <div class="nav-card" onclick="showScreen('dashboard-screen')">
+                        <div class="nav-icon">📋</div>
+                        <div class="nav-info">
+                            <h3>대기 및 테이블 관리</h3>
+                            <p>매장 직원이 호출, 테이블 추천, 입장 처리, 노쇼 및 취소 상태를 통합 관리하는 대시보드입니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- SCREEN 2: CUSTOMER KIOSK (웨이팅 등록 화면)             -->
+        <!-- ======================================================= -->
+        <div id="kiosk-screen" class="screen hidden">
+            <div class="glass-panel">
+                <div class="header-wrapper">
+                    <div class="title-container">
+                        <span style="font-size: 1.75rem;">📱</span>
+                        <h2>고객 웨이팅 등록</h2>
+                    </div>
+                    <button class="btn-home" onclick="showScreen('landing-screen')">
+                        <span>🏡</span> 홈으로
+                    </button>
+                </div>
+
+                <div class="kiosk-layout">
+                    <!-- 웨이팅 등록 폼 -->
+                    <div class="kiosk-form-panel">
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="cust-name">대표자 성함</label>
+                                <input type="text" id="cust-name" class="input-field" placeholder="성함 또는 닉네임 입력">
+                                <div id="name-error" class="error-feedback">대표자 성함을 입력해주세요.</div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="cust-phone">연락처</label>
+                                <input type="text" id="cust-phone" class="input-field" placeholder="010-0000-0000" maxlength="13">
+                                <div id="phone-error" class="error-feedback">연락처 양식이 올바르지 않습니다.</div>
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>방문 인원 (최소 1명)</label>
+                                <div class="party-counter">
+                                    <button type="button" class="btn-counter" onclick="adjustPartySize(-1)">−</button>
+                                    <span id="party-size-val" class="counter-value">2</span>
+                                    <button type="button" class="btn-counter" onclick="adjustPartySize(1)">+</button>
+                                </div>
+                                <div id="party-error" class="error-feedback">인원수는 1명 이상이어야 합니다.</div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="cust-note">요청 사항 (선택)</label>
+                                <input type="text" id="cust-note" class="input-field" placeholder="예: 아기의자 필요, 창가석 선호">
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-submit" onclick="handleRegistrationSubmit()">
+                            🎟️ 웨이팅 등록 및 대기표 발급
+                        </button>
+                    </div>
+
+                    <!-- 실시간 대기 현황 사이드바 -->
+                    <div class="glass-panel kiosk-status-panel">
+                        <div class="status-stat-group">
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                📡 실시간 매장 대기 현황
+                            </h3>
+                            <div class="stat-item">
+                                <span class="stat-label">현재 총 대기</span>
+                                <span id="kiosk-stat-teams" class="stat-value accent">0 팀</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">예상 대기 시간</span>
+                                <span id="kiosk-stat-time" class="stat-value">0 분</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 2rem;">
+                            * 예상 대기 시간은 앞 팀당 약 15분을 기준으로 계산한 참고용 시간입니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- SCREEN 3: MANAGER DASHBOARD (대시보드 쉘)               -->
+        <!-- ======================================================= -->
+        <div id="dashboard-screen" class="screen hidden">
+            <div class="glass-panel">
+                <div class="header-wrapper">
+                    <div class="title-container">
+                        <span style="font-size: 1.75rem;">📋</span>
+                        <h2>대기 및 테이블 관리 (대시보드)</h2>
+                    </div>
+                    <button class="btn-home" onclick="showScreen('landing-screen')">
+                        <span>🏡</span> 홈으로
+                    </button>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- 대기자 목록 영역 (팀원 영역 예고 및 오늘 등록된 데이터 미리보기 연동) -->
+                    <div class="glass-panel" style="background: rgba(30, 41, 59, 0.3);">
+                        <h3 style="font-size: 1.2rem; font-weight: 600; color: white; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                            👥 오늘 대기 등록 명단 (1일차 연동)
+                        </h3>
+                        <div id="dashboard-waiting-list" class="empty-placeholder">
+                            <div class="empty-icon">📂</div>
+                            <p>현재 등록된 대기팀이 없습니다.<br>고객 웨이팅 등록 화면에서 등록해주세요.</p>
+                        </div>
+                    </div>
+
+                    <!-- 테이블 현황 영역 (팀원 영역 예고) -->
+                    <div class="glass-panel" style="background: rgba(30, 41, 59, 0.3);">
+                        <h3 style="font-size: 1.2rem; font-weight: 600; color: white; margin-bottom: 1.25rem;">
+                            🍽️ 매장 테이블 상태 관리 (팀원 구현 예정)
+                        </h3>
+                        <div class="empty-placeholder">
+                            <div class="empty-icon">🔒</div>
+                            <p>2일차 이후 테이블 설정 및 추천 연동 진행 예정입니다.<br>도메인 모델(`RestaurantTable`)이 미리 적용되어 있습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- OVERLAY MODAL: REGISTRATION SUCCESS (등록 성공 대기표) -->
+    <!-- ======================================================= -->
+    <div id="success-overlay" class="success-overlay">
+        <div class="success-card">
+            <div class="success-icon-badge">✓</div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; color: white;">웨이팅 등록 완료!</h3>
+            <div id="assigned-number" class="success-number">No. 12</div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">귀하의 대기 번호표가 발급되었습니다.</p>
+
+            <div class="success-detail-box">
+                <div class="success-row">
+                    <span>성함/닉네임</span>
+                    <span id="confirm-name">-</span>
+                </div>
+                <div class="success-row">
+                    <span>등록 연락처</span>
+                    <span id="confirm-phone">-</span>
+                </div>
+                <div class="success-row">
+                    <span>방문 인원</span>
+                    <span id="confirm-party">-</span>
+                </div>
+                <div class="success-row" style="border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.25rem;">
+                    <span>내 앞 대기</span>
+                    <span id="confirm-ahead" style="color: var(--success); font-weight: 700;">- 팀</span>
+                </div>
+            </div>
+
+            <button type="button" class="btn-close-modal" onclick="closeSuccessModal()">
+                확인 및 닫기
+            </button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
