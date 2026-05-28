@@ -66,10 +66,14 @@ function adjustPartySize(amount) {
     
     currentPartySize += amount;
     
+    // TC-02 인원수 검증 오류 테스트를 위해 0 이하로 내려갈 수 있도록 허용하되, 최소 0으로 제한
+    if (currentPartySize < 0) {
+        currentPartySize = 0;
+    }
+    
     if (currentPartySize < minSize) {
-        currentPartySize = minSize;
         partyError.style.display = 'block';
-        partyError.textContent = `최소 인원은 ${minSize}명입니다.`;
+        partyError.textContent = '인원수는 최소 1명 이상이어야 합니다.';
     } else if (currentPartySize > maxSize) {
         currentPartySize = maxSize;
         partyError.style.display = 'block';
@@ -122,6 +126,7 @@ function handleRegistrationSubmit() {
     // C. 인원수 검증 (FR-03)
     if (currentPartySize < 1) {
         partyError.style.display = 'block';
+        partyError.textContent = '인원수는 최소 1명 이상이어야 합니다.';
         hasError = true;
     } else {
         partyError.style.display = 'none';
