@@ -208,48 +208,131 @@ function closeSuccessModal() {
     successOverlay.classList.remove('active');
 }
 
-// 9. 대시보드 내 1일차 등록 데이터 렌더러 (협업용 연동 기능)
+// 9. 대시보드 상태 필터 및 리스트 렌더러
+let currentDashboardFilter = 'active'; // 기본 필터: 대기/호출 ('active', 'waiting', 'called', 'finished')
+
+function setDashboardFilter(filterType) {
+    currentDashboardFilter = filterType;
+    
+    // 필터 탭 활성화 클래스 조절
+    const filterTabs = ['active', 'waiting', 'called', 'finished'];
+    filterTabs.forEach(type => {
+        const tabEl = document.getElementById(`filter-tab-${type}`);
+        if (tabEl) {
+            if (type === filterType) {
+                tabEl.classList.add('active');
+            } else {
+                tabEl.classList.remove('active');
+            }
+        }
+    });
+    
+    renderDashboardWaitingList();
+}
+
 function renderDashboardWaitingList() {
     const listContainer = document.getElementById('dashboard-waiting-list');
     if (!listContainer) return;
 
-    // 대기 명단 중 입장 완료(seated), 취소(cancelled), 노쇼(no-show)를 제외한 활성 대기 리스트 우선 조회
-    const activeEntries = AppState.waitingList.filter(entry => 
-        entry.status === 'waiting' || entry.status === 'called'
-    );
+    // 필터 조건에 따른 리스트 추출
+    let filteredEntries = [];
+    if (currentDashboardFilter === 'active') {
+        filteredEntries = AppState.waitingList.filter(entry => 
+            entry.status === 'waiting' || entry.status === 'called'
+        );
+    } else if (currentDashboardFilter === 'waiting') {
+        filteredEntries = AppState.waitingList.filter(entry => entry.status === 'waiting');
+    } else if (currentDashboardFilter === 'called') {
+        filteredEntries = AppState.waitingList.filter(entry => entry.status === 'called');
+    } else if (currentDashboardFilter === 'finished') {
+        filteredEntries = AppState.waitingList.filter(entry => 
+            entry.status === 'cancelled' || entry.status === 'no-show' || entry.status === 'seated'
+        );
+    }
 
-    if (activeEntries.length === 0) {
+    // 대기 번호 오름차순(등록 순서) 정렬 (FR-05)
+    filteredEntries.sort((a, b) => a.waitingNumber - b.waitingNumber);
+
+    if (filteredEntries.length === 0) {
+        let emptyMessage = '현재 조건에 해당하는 대기팀이 없습니다.';
+        let emptyIcon = '👥';
+        if (currentDashboardFilter === 'waiting') {
+            emptyMessage = '대기 중인 팀이 없습니다.';
+            emptyIcon = '⏳';
+        } else if (currentDashboardFilter === 'called') {
+            emptyMessage = '호출 상태인 팀이 없습니다.';
+            emptyIcon = '📢';
+        } else if (currentDashboardFilter === 'finished') {
+            emptyMessage = '취소되거나 종료된 팀이 없습니다.';
+            emptyIcon = '🗑️';
+        }
+
         listContainer.innerHTML = `
             <div class="empty-placeholder">
-                <div class="empty-icon">👥</div>
-                <p>현재 활성화된 대기팀이 없습니다.<br>고객 웨이팅 등록 화면에서 등록해주세요.</p>
+                <div class="empty-icon">${emptyIcon}</div>
+                <p>${emptyMessage}</p>
             </div>
         `;
         return;
     }
 
     let html = `
-        <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; overflow-y: auto; max-height: 420px; padding-right: 0.25rem;">
+        <div class="waiting-list-scroll">
     `;
 
-    activeEntries.forEach(entry => {
+    filteredEntries.forEach(entry => {
         const time = new Date(entry.createdAt);
         const timeFormatted = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
         
+        // 상태별 배지 텍스트 및 클래스 매칭
+        let statusBadgeHtml = '';
+        if (entry.status === 'waiting') {
+            statusBadgeHtml = `<span class="badge waiting">대기중</span>`;
+        } else if (entry.status === 'called') {
+            statusBadgeHtml = `<span class="badge called">호출됨</span>`;
+        } else if (entry.status === 'cancelled') {
+            statusBadgeHtml = `<span class="badge cancelled">취소됨</span>`;
+        } else if (entry.status === 'no-show') {
+            statusBadgeHtml = `<span class="badge noshow">노쇼</span>`;
+        } else if (entry.status === 'seated') {
+            statusBadgeHtml = `<span class="badge seated">입장완료</span>`;
+        }
+
+        // 상태에 따른 액션 버튼 그룹 구성
+        let actionButtonsHtml = '';
+        if (entry.status === 'waiting') {
+            actionButtonsHtml = `
+                <div class="action-btn-group">
+                    <button class="btn-action call" onclick="callCustomer('${entry.id}')">📢 호출</button>
+                    <button class="btn-action cancel" onclick="cancelWaiting('${entry.id}')">🗑️ 취소</button>
+                </div>
+            `;
+        } else if (entry.status === 'called') {
+            actionButtonsHtml = `
+                <div class="action-btn-group">
+                    <button class="btn-action noshow" onclick="noShowCustomer('${entry.id}')">⚠️ 노쇼</button>
+                    <button class="btn-action cancel" onclick="cancelWaiting('${entry.id}')">🗑️ 취소</button>
+                </div>
+            `;
+        }
+
         html += `
             <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;">
-                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">No. ${entry.waitingNumber}</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">No. ${entry.waitingNumber}</span>
+                        ${statusBadgeHtml}
+                    </div>
                     <div style="font-size: 0.95rem; font-weight: 600; color: white;">
                         ${entry.name} <span style="font-size: 0.85rem; font-weight: 400; color: var(--text-secondary);">(${entry.partySize}명)</span>
                     </div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">${entry.phone}</div>
                     ${entry.requestNote ? `<div style="font-size: 0.8rem; color: var(--warning); padding-top: 0.25rem; font-style: italic;">💬 ${entry.requestNote}</div>` : ''}
+                    
+                    <!-- 액션 버튼들 -->
+                    ${actionButtonsHtml}
                 </div>
-                <div style="text-align: right; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
-                    <span style="display: inline-block; background: rgba(99, 102, 241, 0.15); color: #818cf8; padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">
-                        ${entry.status === 'waiting' ? '대기중' : '호출됨'}
-                    </span>
+                <div style="text-align: right; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; justify-content: center;">
                     <span style="font-size: 0.75rem; color: var(--text-muted);">${timeFormatted} 등록</span>
                 </div>
             </div>
@@ -258,6 +341,65 @@ function renderDashboardWaitingList() {
 
     html += `</div>`;
     listContainer.innerHTML = html;
+}
+
+// 9.5 대기 고객 상태 변경 핸들러 (FR-06, FR-07, FR-08)
+function callCustomer(id) {
+    const entry = AppState.waitingList.find(e => e.id === id);
+    if (!entry) return;
+
+    // BR-02 검증: waiting 상태 고객만 호출 가능
+    if (entry.status !== 'waiting') {
+        alert('대기중인 고객만 호출할 수 있습니다.');
+        return;
+    }
+
+    entry.status = 'called';
+    entry.calledAt = new Date().toISOString();
+    
+    saveStateToStorage();
+    updateKioskStats();
+    renderDashboardWaitingList();
+}
+
+function cancelWaiting(id) {
+    const entry = AppState.waitingList.find(e => e.id === id);
+    if (!entry) return;
+
+    // waiting 또는 called 상태일 때만 취소 가능
+    if (entry.status !== 'waiting' && entry.status !== 'called') {
+        alert('이미 완료되거나 종료된 예약은 취소할 수 없습니다.');
+        return;
+    }
+
+    if (confirm(`${entry.name} 고객님의 웨이팅을 취소하시겠습니까?`)) {
+        entry.status = 'cancelled';
+        entry.cancelledAt = new Date().toISOString();
+        
+        saveStateToStorage();
+        updateKioskStats();
+        renderDashboardWaitingList();
+    }
+}
+
+function noShowCustomer(id) {
+    const entry = AppState.waitingList.find(e => e.id === id);
+    if (!entry) return;
+
+    // BR-05 / BR-02 간접 검증: called 상태 고객만 노쇼 처리 가능
+    if (entry.status !== 'called') {
+        alert('호출된 고객만 노쇼 처리할 수 있습니다.');
+        return;
+    }
+
+    if (confirm(`${entry.name} 고객님을 노쇼 처리하시겠습니까?`)) {
+        entry.status = 'no-show';
+        entry.noShowAt = new Date().toISOString();
+        
+        saveStateToStorage();
+        updateKioskStats();
+        renderDashboardWaitingList();
+    }
 }
 
 // 10. LocalStorage 상태 동기화 함수 (영속화 제공)
