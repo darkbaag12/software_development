@@ -157,14 +157,31 @@
                         </div>
                     </div>
 
-                    <!-- 테이블 현황 영역 (팀원 영역 예고) -->
-                    <div class="glass-panel" style="background: rgba(30, 41, 59, 0.3);">
-                        <h3 style="font-size: 1.2rem; font-weight: 600; color: white; margin-bottom: 1.25rem;">
-                            🍽️ 매장 테이블 상태 관리 (팀원 구현 예정)
+                    <!-- 테이블 현황 영역 -->
+                    <div class="glass-panel" style="background: rgba(30, 41, 59, 0.3); display: flex; flex-direction: column; gap: 1rem;">
+                        <h3 style="font-size: 1.2rem; font-weight: 600; color: white; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            🍽️ 매장 테이블 상태 관리
                         </h3>
-                        <div class="empty-placeholder">
-                            <div class="empty-icon">🔒</div>
-                            <p>2일차 이후 테이블 설정 및 추천 연동 진행 예정입니다.<br>도메인 모델(`RestaurantTable`)이 미리 적용되어 있습니다.</p>
+                        
+                        <!-- 테이블 등록 폼 -->
+                        <div class="table-register-form">
+                            <div class="table-register-inputs">
+                                <div class="table-input-group">
+                                    <label for="table-number">테이블 번호</label>
+                                    <input type="text" id="table-number" class="input-field-sm" placeholder="예: A1, T1">
+                                </div>
+                                <div class="table-input-group">
+                                    <label for="table-capacity">수용 인원</label>
+                                    <input type="number" id="table-capacity" class="input-field-sm" min="1" placeholder="예: 4">
+                                </div>
+                            </div>
+                            <button type="button" class="btn-register-table" onclick="handleTableRegistrationSubmit()">테이블 등록</button>
+                            <div id="table-error" class="error-feedback" style="margin-top: 0.25rem;"></div>
+                        </div>
+
+                        <!-- 테이블 목록 그리드 -->
+                        <div id="dashboard-tables-container" style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- 테이블 목록이 여기에 렌더링됩니다 -->
                         </div>
                     </div>
                 </div>

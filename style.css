@@ -736,3 +736,176 @@ body {
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* --- Phase 3: Table Registration & Table Cards --- */
+.table-register-form {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.table-register-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.table-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.table-input-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.input-field-sm {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.input-field-sm:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.btn-register-table {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.6rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-register-table:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+
+/* Tables Grid Scroll */
+.tables-list-scroll {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    width: 100%;
+    overflow-y: auto;
+    max-height: 280px;
+    padding-right: 0.25rem;
+}
+
+.tables-list-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tables-list-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.tables-list-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.tables-list-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Table Cards */
+.table-card {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.table-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.table-card.status-available {
+    border-left: 4px solid var(--success);
+}
+
+.table-card.status-occupied {
+    border-left: 4px solid var(--danger);
+}
+
+.table-card.status-cleaning {
+    border-left: 4px solid var(--warning);
+}
+
+.table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-card-num {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: white;
+}
+
+.table-card-capacity {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.table-status-select {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 0.4rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+.table-status-select:focus {
+    border-color: var(--primary);
+}
+
+.btn-delete-table {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+    line-height: 1;
+}
+
+.btn-delete-table:hover {
+    color: var(--danger);
+}
+

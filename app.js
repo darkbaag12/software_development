@@ -38,6 +38,7 @@ function showScreen(screenId) {
         updateKioskStats();
     } else if (screenId === 'dashboard-screen') {
         renderDashboardWaitingList();
+        renderDashboardTables();
     }
 }
 
@@ -423,4 +424,137 @@ function loadStateFromStorage() {
     } catch(e) {
         console.error("LocalStorage 데이터를 불러오는 중 실패하였습니다.", e);
     }
+}
+
+// 11. 매장 테이블 관리 핸들러 (FR-09, FR-13)
+function handleTableRegistrationSubmit() {
+    const tableNumInput = document.getElementById('table-number');
+    const tableCapInput = document.getElementById('table-capacity');
+    const tableError = document.getElementById('table-error');
+
+    if (!tableNumInput || !tableCapInput || !tableError) return;
+
+    const tableNumber = tableNumInput.value.trim();
+    const capacity = parseInt(tableCapInput.value.trim(), 10);
+
+    tableError.textContent = '';
+    tableError.style.display = 'none';
+
+    // A. 테이블 번호 공백 검증
+    if (!tableNumber) {
+        tableError.textContent = '테이블 번호를 입력해주세요.';
+        tableError.style.display = 'block';
+        return;
+    }
+
+    // B. 수용 인원 검증 (1명 이상)
+    if (isNaN(capacity) || capacity < 1) {
+        tableError.textContent = '수용 인원은 최소 1명 이상이어야 합니다.';
+        tableError.style.display = 'block';
+        return;
+    }
+
+    // C. 테이블 번호 중복 등록 검증 (대소문자 구분 없이)
+    const isDuplicate = AppState.tables.some(
+        t => t.tableNumber.trim().toLowerCase() === tableNumber.toLowerCase()
+    );
+    if (isDuplicate) {
+        tableError.textContent = '이미 등록된 테이블 번호입니다.';
+        tableError.style.display = 'block';
+        return;
+    }
+
+    // D. 신규 RestaurantTable 객체 생성
+    const newTable = {
+        id: 'T-' + Date.now(),
+        tableNumber: tableNumber,
+        capacity: capacity,
+        status: 'available' // 초기 상태는 항상 'available'
+    };
+
+    // E. 상태 업데이트 및 영속화
+    AppState.tables.push(newTable);
+    saveStateToStorage();
+
+    // F. 테이블 목록 그리드 재렌더링
+    renderDashboardTables();
+
+    // G. 입력 폼 초기화
+    tableNumInput.value = '';
+    tableCapInput.value = '';
+}
+
+function renderDashboardTables() {
+    const container = document.getElementById('dashboard-tables-container');
+    if (!container) return;
+
+    if (!AppState.tables || AppState.tables.length === 0) {
+        container.innerHTML = `
+            <div class="empty-placeholder" style="height: 200px;">
+                <div class="empty-icon">🍽️</div>
+                <p>등록된 매장 테이블이 없습니다.<br>위 폼에서 테이블 번호와 인원수를 입력해 등록하세요.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `<div class="tables-list-scroll">`;
+
+    AppState.tables.forEach(table => {
+        const statusClass = `status-${table.status}`;
+        
+        html += `
+            <div class="table-card ${statusClass}">
+                <button type="button" class="btn-delete-table" onclick="deleteTable('${table.id}')" title="테이블 삭제">✕</button>
+                <div class="table-card-header">
+                    <span class="table-card-num">${escapeHtml(table.tableNumber)}</span>
+                    <span class="table-card-capacity">${table.capacity}인석</span>
+                </div>
+                <div>
+                    <select class="table-status-select" onchange="changeTableStatus('${table.id}', this.value)">
+                        <option value="available" ${table.status === 'available' ? 'selected' : ''}>이용 가능</option>
+                        <option value="occupied" ${table.status === 'occupied' ? 'selected' : ''}>식사 중</option>
+                        <option value="cleaning" ${table.status === 'cleaning' ? 'selected' : ''}>정리 중</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function changeTableStatus(tableId, newStatus) {
+    const table = AppState.tables.find(t => t.id === tableId);
+    if (!table) return;
+
+    // 상태값 유효성 검증
+    if (newStatus === 'available' || newStatus === 'occupied' || newStatus === 'cleaning') {
+        table.status = newStatus;
+        saveStateToStorage();
+        renderDashboardTables();
+    }
+}
+
+function deleteTable(tableId) {
+    const table = AppState.tables.find(t => t.id === tableId);
+    if (!table) return;
+
+    if (confirm(`테이블 ${table.tableNumber}을(를) 삭제하시겠습니까?`)) {
+        AppState.tables = AppState.tables.filter(t => t.id !== tableId);
+        saveStateToStorage();
+        renderDashboardTables();
+    }
+}
+
+// HTML 이스케이프 유틸리티 함수
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
