@@ -311,6 +311,7 @@ function renderDashboardWaitingList() {
         } else if (entry.status === 'called') {
             actionButtonsHtml = `
                 <div class="action-btn-group">
+                    <button class="btn-action seat" onclick="openSeatingModal('${entry.id}')">🔑 입장 배정</button>
                     <button class="btn-action noshow" onclick="noShowCustomer('${entry.id}')">⚠️ 노쇼</button>
                     <button class="btn-action cancel" onclick="cancelWaiting('${entry.id}')">🗑️ 취소</button>
                 </div>
@@ -546,6 +547,144 @@ function deleteTable(tableId) {
         saveStateToStorage();
         renderDashboardTables();
     }
+}
+
+// 12. 테이블 배정 및 입장 처리 모달 기능 (Phase 3)
+let currentSeatingEntryId = null;
+let selectedSeatingTableId = null;
+
+function openSeatingModal(entryId) {
+    currentSeatingEntryId = entryId;
+    selectedSeatingTableId = null;
+    
+    // 확정 버튼 비활성화 초기화
+    const confirmBtn = document.getElementById('btn-confirm-seating');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+    }
+
+    const entry = AppState.waitingList.find(e => e.id === entryId);
+    if (!entry) return;
+
+    // 모달 내 고객 정보 렌더링
+    document.getElementById('seat-cust-number').textContent = entry.waitingNumber;
+    document.getElementById('seat-cust-name').textContent = entry.name;
+    document.getElementById('seat-cust-party').textContent = `${entry.partySize}명`;
+    
+    const noteEl = document.getElementById('seat-cust-note');
+    if (noteEl) {
+        noteEl.textContent = entry.requestNote ? `💬 요청사항: ${entry.requestNote}` : '💬 요청사항: 없음';
+    }
+
+    // 추천 테이블 목록 빌드 및 렌더링
+    const tablesListContainer = document.getElementById('seating-tables-list');
+    if (tablesListContainer) {
+        const recommended = recommendTables(entry.partySize);
+
+        if (recommended.length === 0) {
+            tablesListContainer.innerHTML = `
+                <div class="no-tables-msg">
+                    ⚠️ 현재 인원(${entry.partySize}명)을 수용할 수 있는 이용 가능한 테이블이 없습니다.<br>
+                    식사 중이거나 정리 중인 테이블의 상태를 확인해 주세요.
+                </div>
+            `;
+        } else {
+            let html = '';
+            
+            // capacity 오름차순으로 정렬되었으므로 첫 번째 요소를 최적 추천으로 함
+            recommended.forEach((table, index) => {
+                const isBest = (index === 0);
+                const bestClass = isBest ? 'best-recommend' : '';
+                const bestBadge = isBest ? '<span class="best-recommend-badge">최적 추천</span>' : '';
+                
+                html += `
+                    <div class="seating-table-card ${bestClass}" onclick="selectSeatingTable('${table.id}', this)">
+                        ${bestBadge}
+                        <div class="seating-table-card-num">${escapeHtml(table.tableNumber)}</div>
+                        <div class="seating-table-card-capacity">${table.capacity}인석</div>
+                        <div class="seating-table-card-status">이용 가능</div>
+                    </div>
+                `;
+            });
+            tablesListContainer.innerHTML = html;
+        }
+    }
+
+    // 모달 활성화
+    const overlay = document.getElementById('seating-overlay');
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+}
+
+function selectSeatingTable(tableId, element) {
+    selectedSeatingTableId = tableId;
+
+    // 모든 테이블 카드의 선택 스타일 제거
+    const cards = document.querySelectorAll('.seating-table-card');
+    cards.forEach(card => card.classList.remove('selected'));
+
+    // 클릭된 카드에 선택 스타일 부여
+    if (element) {
+        element.classList.add('selected');
+    }
+
+    // 배정 확정 버튼 활성화
+    const confirmBtn = document.getElementById('btn-confirm-seating');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+    }
+}
+
+function recommendTables(partySize) {
+    // 이용 가능(available) 상태이면서 고객의 인원수 이상 수용 가능한 테이블 필터링
+    const suitableTables = AppState.tables.filter(t => 
+        t.status === 'available' && t.capacity >= partySize
+    );
+
+    // 수용 인원 기준 오름차순 정렬 (가장 적당하고 작은 테이블 추천)
+    suitableTables.sort((a, b) => a.capacity - b.capacity);
+
+    return suitableTables;
+}
+
+function closeSeatingModal() {
+    const overlay = document.getElementById('seating-overlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+    currentSeatingEntryId = null;
+    selectedSeatingTableId = null;
+}
+
+function submitSeatingAssignment() {
+    if (!currentSeatingEntryId || !selectedSeatingTableId) return;
+
+    const entry = AppState.waitingList.find(e => e.id === currentSeatingEntryId);
+    const table = AppState.tables.find(t => t.id === selectedSeatingTableId);
+
+    if (!entry || !table) {
+        alert('배정 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+    // 고객 상태 변경: seated
+    entry.status = 'seated';
+    entry.seatedAt = new Date().toISOString();
+
+    // 테이블 상태 변경: occupied
+    table.status = 'occupied';
+
+    // 로컬 스토리지 데이터 영속화
+    saveStateToStorage();
+
+    // 모달 닫기
+    closeSeatingModal();
+
+    // UI 동기화
+    renderDashboardWaitingList();
+    renderDashboardTables();
+    updateKioskStats();
 }
 
 // HTML 이스케이프 유틸리티 함수

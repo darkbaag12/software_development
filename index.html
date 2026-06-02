@@ -225,6 +225,48 @@
         </div>
     </div>
 
+    <!-- ======================================================= -->
+    <!-- OVERLAY MODAL: SEATING & TABLE ASSIGNMENT (테이블 배정 및 입장) -->
+    <!-- ======================================================= -->
+    <div id="seating-overlay" class="success-overlay">
+        <div class="seating-card">
+            <div class="seating-card-header">
+                <h3 style="font-size: 1.4rem; font-weight: 700; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                    🍽️ 테이블 추천 및 입장 배정
+                </h3>
+                <button type="button" class="btn-close-modal-x" onclick="closeSeatingModal()">✕</button>
+            </div>
+            
+            <!-- 배정 대상 고객 정보 -->
+            <div class="seating-customer-info">
+                <div class="cust-info-badge">No. <span id="seat-cust-number">-</span></div>
+                <div class="cust-info-details">
+                    <div class="cust-info-name">
+                        <span id="seat-cust-name">-</span>
+                        <span id="seat-cust-party" class="party-span">-명</span>
+                    </div>
+                    <div id="seat-cust-note" class="cust-info-note">💬 요청사항: 없음</div>
+                </div>
+            </div>
+
+            <!-- 추천 테이블 영역 -->
+            <div class="recommended-tables-section">
+                <h4 class="section-title">💡 배정 가능한 테이블 추천</h4>
+                <div id="seating-tables-list" class="seating-tables-grid">
+                    <!-- Javascript가 추천 테이블 카드를 동적으로 렌더링 -->
+                </div>
+            </div>
+
+            <!-- 하단 액션 버튼 -->
+            <div class="seating-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeSeatingModal()">취소</button>
+                <button type="button" id="btn-confirm-seating" class="btn-submit-seating" disabled onclick="submitSeatingAssignment()">
+                    배정 및 입장 확정
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

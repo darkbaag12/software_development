@@ -1,0 +1,12 @@
+{
+  "name": "restaurant-waiting-table-system",
+  "version": "1.0.0",
+  "description": "소규모 음식점을 위한 웨이팅 및 테이블 배정 관리 시스템",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npx -y serve ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
