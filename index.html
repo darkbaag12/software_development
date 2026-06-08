@@ -136,6 +136,79 @@
                     </button>
                 </div>
 
+                <!-- ======================================================= -->
+                <!-- ANALYTICS SUMMARY (운영 통계 섹션)                       -->
+                <!-- ======================================================= -->
+                <div class="analytics-section">
+                    <h3 class="analytics-title">📊 운영 분석 & 통계 (Analytics Summary)</h3>
+                    <div class="analytics-grid">
+                        <!-- 카드 1: 노쇼 및 취소 비율 -->
+                        <div class="analytics-card">
+                            <h4 class="card-title">🚫 평균 노쇼 및 취소 비율</h4>
+                            <div class="analytics-stat-row">
+                                <div class="stat-circle-wrapper">
+                                    <svg class="progress-ring" width="80" height="80">
+                                        <circle class="progress-ring-bg" stroke="rgba(255, 255, 255, 0.05)" stroke-width="6" fill="transparent" r="34" cx="40" cy="40"/>
+                                        <circle id="no-show-rate-ring" class="progress-ring-bar" stroke="var(--danger)" stroke-width="6" fill="transparent" r="34" cx="40" cy="40" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+                                    </svg>
+                                    <div id="no-show-rate-text" class="stat-circle-text">0.0%</div>
+                                </div>
+                                <div class="stat-details-grid">
+                                    <div class="detail-item">
+                                        <span>전체 등록</span>
+                                        <strong id="stat-total">0건</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>대기중</span>
+                                        <strong id="stat-waiting">0건</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>입장완료</span>
+                                        <strong id="stat-seated">0건</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>노쇼</span>
+                                        <strong id="stat-noshow" style="color: var(--danger)">0건</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>취소됨</span>
+                                        <strong id="stat-cancelled" style="color: var(--warning)">0건</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 카드 2: 인원수 그룹별 평균 대기 시간 -->
+                        <div class="analytics-card">
+                            <h4 class="card-title">⏳ 인원수 그룹별 평균 대기 시간</h4>
+                            <div class="group-wait-list">
+                                <div class="group-wait-item">
+                                    <span class="group-label">👥 1~2인</span>
+                                    <span id="wait-group-small" class="group-value">데이터 없음</span>
+                                </div>
+                                <div class="group-wait-item">
+                                    <span class="group-label">👨‍👩‍👦 3~4인</span>
+                                    <span id="wait-group-medium" class="group-value">데이터 없음</span>
+                                </div>
+                                <div class="group-wait-item">
+                                    <span class="group-label">👑 5인 이상</span>
+                                    <span id="wait-group-large" class="group-value">데이터 없음</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 카드 3: 시간대별 내방 고객 집중도 -->
+                        <div class="analytics-card span-col-2">
+                            <h4 class="card-title">⏰ 시간대별 내방 고객 집중도 (11시 - 22시)</h4>
+                            <div class="chart-container">
+                                <div id="hourly-chart" class="bar-chart">
+                                    <!-- JS에서 동적 렌더링 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-grid">
                     <!-- 대기자 목록 영역 (대기 및 상태 관리 통합) -->
                     <div class="glass-panel" style="background: rgba(30, 41, 59, 0.3); display: flex; flex-direction: column; gap: 1rem;">

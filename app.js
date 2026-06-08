@@ -235,6 +235,9 @@ function renderDashboardWaitingList() {
     const listContainer = document.getElementById('dashboard-waiting-list');
     if (!listContainer) return;
 
+    // 통계 요약 갱신
+    renderAnalyticsSummary();
+
     // 필터 조건에 따른 리스트 추출
     let filteredEntries = [];
     if (currentDashboardFilter === 'active') {
@@ -697,3 +700,166 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+
+// 13. 운영 통계 계산 및 렌더링 함수 (Issue #8)
+function calculateAnalyticsSummary() {
+    const list = AppState.waitingList || [];
+    
+    // 1. 평균 노쇼 및 취소 비율
+    const totalCount = list.length;
+    let waitingCount = 0;
+    let seatedCount = 0;
+    let noShowCount = 0;
+    let cancelledCount = 0;
+    
+    list.forEach(entry => {
+        if (entry.status === 'waiting') waitingCount++;
+        else if (entry.status === 'seated') seatedCount++;
+        else if (entry.status === 'no-show') noShowCount++;
+        else if (entry.status === 'cancelled') cancelledCount++;
+    });
+    
+    const noShowAndCancelled = noShowCount + cancelledCount;
+    const rate = totalCount > 0 ? (noShowAndCancelled / totalCount) * 100 : 0;
+    
+    // 2. 인원수 그룹별 평균 대기 시간 (seated 상태 고객만 대상)
+    let smallWaitSum = 0, smallCount = 0;
+    let mediumWaitSum = 0, mediumCount = 0;
+    let largeWaitSum = 0, largeCount = 0;
+    
+    list.forEach(entry => {
+        if (entry.status === 'seated') {
+            if (entry.seatedAt && entry.createdAt) {
+                const seatTime = new Date(entry.seatedAt);
+                const createTime = new Date(entry.createdAt);
+                
+                if (!isNaN(seatTime.getTime()) && !isNaN(createTime.getTime())) {
+                    const diffMs = seatTime.getTime() - createTime.getTime();
+                    const diffMins = Math.max(0, diffMs / 1000 / 60);
+                    
+                    const party = entry.partySize || 0;
+                    if (party >= 1 && party <= 2) {
+                        smallWaitSum += diffMins;
+                        smallCount++;
+                    } else if (party >= 3 && party <= 4) {
+                        mediumWaitSum += diffMins;
+                        mediumCount++;
+                    } else if (party >= 5) {
+                        largeWaitSum += diffMins;
+                        largeCount++;
+                    }
+                }
+            }
+        }
+    });
+    
+    const avgWaitSmall = smallCount > 0 ? (smallWaitSum / smallCount) : null;
+    const avgWaitMedium = mediumCount > 0 ? (mediumWaitSum / mediumCount) : null;
+    const avgWaitLarge = largeCount > 0 ? (largeWaitSum / largeCount) : null;
+    
+    // 3. 시간대별 내방 고객 집중도 (11시~22시 범위 기본)
+    const hourlyCounts = {};
+    for (let h = 11; h <= 22; h++) {
+        hourlyCounts[h] = 0;
+    }
+    
+    list.forEach(entry => {
+        if (entry.createdAt) {
+            const createTime = new Date(entry.createdAt);
+            if (!isNaN(createTime.getTime())) {
+                const hour = createTime.getHours();
+                if (hour >= 11 && hour <= 22) {
+                    hourlyCounts[hour]++;
+                }
+            }
+        }
+    });
+    
+    return {
+        counts: {
+            total: totalCount,
+            waiting: waitingCount,
+            seated: seatedCount,
+            noshow: noShowCount,
+            cancelled: cancelledCount
+        },
+        rate: rate,
+        avgWaitTimes: {
+            small: avgWaitSmall,
+            medium: avgWaitMedium,
+            large: avgWaitLarge
+        },
+        hourlyCounts: hourlyCounts
+    };
+}
+
+function renderAnalyticsSummary() {
+    const summary = calculateAnalyticsSummary();
+    
+    // A. 평균 노쇼 및 취소 비율 업데이트
+    const noShowRing = document.getElementById('no-show-rate-ring');
+    const noShowRateText = document.getElementById('no-show-rate-text');
+    if (noShowRateText) {
+        noShowRateText.textContent = `${summary.rate.toFixed(1)}%`;
+    }
+    if (noShowRing) {
+        const radius = 34;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (summary.rate / 100) * circumference;
+        noShowRing.style.strokeDashoffset = isNaN(offset) ? circumference : offset;
+    }
+    
+    // 개별 숫자 노출
+    const statTotal = document.getElementById('stat-total');
+    const statWaiting = document.getElementById('stat-waiting');
+    const statSeated = document.getElementById('stat-seated');
+    const statNoshow = document.getElementById('stat-noshow');
+    const statCancelled = document.getElementById('stat-cancelled');
+    
+    if (statTotal) statTotal.textContent = `${summary.counts.total}건`;
+    if (statWaiting) statWaiting.textContent = `${summary.counts.waiting}건`;
+    if (statSeated) statSeated.textContent = `${summary.counts.seated}건`;
+    if (statNoshow) statNoshow.textContent = `${summary.counts.noshow}건`;
+    if (statCancelled) statCancelled.textContent = `${summary.counts.cancelled}건`;
+    
+    // B. 그룹별 평균 대기 시간 업데이트
+    const waitSmall = document.getElementById('wait-group-small');
+    const waitMedium = document.getElementById('wait-group-medium');
+    const waitLarge = document.getElementById('wait-group-large');
+    
+    const formatWaitTime = (val) => {
+        if (val === null || val === undefined) return '데이터 없음';
+        return `${val.toFixed(1)}분`;
+    };
+    
+    if (waitSmall) waitSmall.textContent = formatWaitTime(summary.avgWaitTimes.small);
+    if (waitMedium) waitMedium.textContent = formatWaitTime(summary.avgWaitTimes.medium);
+    if (waitLarge) waitLarge.textContent = formatWaitTime(summary.avgWaitTimes.large);
+    
+    // C. 시간대별 내방 집중도 차트 그리기
+    const hourlyChart = document.getElementById('hourly-chart');
+    if (hourlyChart) {
+        let maxCount = 0;
+        for (let h = 11; h <= 22; h++) {
+            if (summary.hourlyCounts[h] > maxCount) {
+                maxCount = summary.hourlyCounts[h];
+            }
+        }
+        
+        let html = '';
+        for (let h = 11; h <= 22; h++) {
+            const count = summary.hourlyCounts[h];
+            const heightPercent = maxCount > 0 ? (count / maxCount) * 80 : 0;
+            
+            html += `
+                <div class="chart-bar-wrapper">
+                    <div class="chart-tooltip">${h}시: ${count}건 등록</div>
+                    <div class="chart-bar" style="height: calc(${heightPercent}% + 2px);"></div>
+                    <span class="chart-bar-label">${h}시</span>
+                </div>
+            `;
+        }
+        hourlyChart.innerHTML = html;
+    }
+}
+

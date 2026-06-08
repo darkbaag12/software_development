@@ -1192,4 +1192,256 @@ body {
     transform: none !important;
 }
 
+/* ======================================================= */
+/* 4일차: 운영 분석 및 통계 (Analytics Section) 스타일링   */
+/* ======================================================= */
+.analytics-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(30, 41, 59, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.analytics-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.analytics-card {
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.analytics-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.analytics-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Card 1: Progress Ring & Details */
+.analytics-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.stat-circle-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-bar {
+    transition: stroke-dashoffset 0.4s ease-in-out;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.3));
+}
+
+.stat-circle-text {
+    position: absolute;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+}
+
+.stat-details-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.detail-item span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.detail-item strong {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Card 2: Group Wait times */
+.group-wait-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    justify-content: center;
+}
+
+.group-wait-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.group-wait-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.group-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.group-value {
+    font-size: 0.9rem;
+    color: white;
+    font-weight: 700;
+}
+
+/* Card 3: Bar Chart */
+.chart-container {
+    height: 110px;
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    padding-top: 0.5rem;
+}
+
+.bar-chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    height: 100%;
+    gap: 0.4rem;
+}
+
+.chart-bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    position: relative;
+    cursor: pointer;
+}
+
+.chart-bar {
+    width: 100%;
+    max-width: 28px;
+    background: linear-gradient(to top, var(--primary) 0%, #a78bfa 100%);
+    border-radius: 6px 6px 0 0;
+    min-height: 2px;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+    position: relative;
+}
+
+.chart-bar-wrapper:hover .chart-bar {
+    background: linear-gradient(to top, var(--primary-hover) 0%, #c084fc 100%);
+    transform: scaleX(1.05);
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.4);
+}
+
+.chart-bar-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.chart-bar-wrapper:hover .chart-bar-label {
+    color: white;
+}
+
+/* Tooltip style */
+.chart-tooltip {
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    pointer-events: none;
+    opacity: 0;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.chart-bar-wrapper:hover .chart-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Custom modifier for layout grid responsiveness */
+@media (min-width: 901px) {
+    .span-col-2 {
+        grid-column: span 2;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
 
