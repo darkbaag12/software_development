@@ -863,3 +863,73 @@ function renderAnalyticsSummary() {
     }
 }
 
+// 14. 통계 시연용 샘플 데이터 생성/삭제 기능 (Issue #8)
+function generateSampleData() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // 샘플 템플릿 정의
+    const samples = [
+        { name: "김철수", phone: "010-1111-2222", partySize: 2, status: "seated", hour: 11, min: 15, seatDiff: 12 },
+        { name: "이영희", phone: "010-2222-3333", partySize: 4, status: "seated", hour: 12, min: 0, seatDiff: 24 },
+        { name: "박민수", phone: "010-3333-4444", partySize: 6, status: "seated", hour: 13, min: 30, seatDiff: 45 },
+        { name: "최정우", phone: "010-4444-5555", partySize: 1, status: "no-show", hour: 14, min: 10 },
+        { name: "정다은", phone: "010-5555-6666", partySize: 2, status: "cancelled", hour: 15, min: 45 },
+        { name: "홍길동", phone: "010-6666-7777", partySize: 3, status: "waiting", hour: 17, min: 0 },
+        { name: "송지은", phone: "010-7777-8888", partySize: 5, status: "called", hour: 18, min: 15 },
+        { name: "강동우", phone: "010-8888-9999", partySize: 2, status: "seated", hour: 19, min: 30, seatDiff: 18 },
+        { name: "윤서연", phone: "010-9999-0000", partySize: 4, status: "seated", hour: 20, min: 0, seatDiff: 32 },
+        { name: "조현우", phone: "010-1234-5678", partySize: 2, status: "waiting", hour: 21, min: 10 },
+        { name: "한미경", phone: "010-8765-4321", partySize: 3, status: "cancelled", hour: 22, min: 0 }
+    ];
+
+    samples.forEach((sample, idx) => {
+        const createTime = new Date(`${todayStr}T${String(sample.hour).padStart(2, '0')}:${String(sample.min).padStart(2, '0')}:00`);
+        let seatTime = null;
+        if (sample.status === 'seated' && sample.seatDiff) {
+            seatTime = new Date(createTime.getTime() + sample.seatDiff * 60 * 1000);
+        }
+
+        const newEntry = {
+            id: 'W-SAMPLE-' + idx + '-' + Date.now(),
+            waitingNumber: AppState.nextWaitingNumber++,
+            name: sample.name + "(샘플)",
+            phone: sample.phone,
+            partySize: sample.partySize,
+            requestNote: sample.status === 'seated' ? '샘플 입장 데이터' : '샘플 데이터',
+            status: sample.status,
+            createdAt: createTime.toISOString(),
+            seatedAt: seatTime ? seatTime.toISOString() : null,
+            calledAt: (sample.status === 'called' || sample.status === 'seated' || sample.status === 'no-show') ? new Date(createTime.getTime() + 5 * 60 * 1000).toISOString() : null,
+            noShowAt: sample.status === 'no-show' ? new Date(createTime.getTime() + 15 * 60 * 1000).toISOString() : null,
+            cancelledAt: sample.status === 'cancelled' ? new Date(createTime.getTime() + 10 * 60 * 1000).toISOString() : null,
+            isSample: true
+        };
+        AppState.waitingList.push(newEntry);
+    });
+
+    saveStateToStorage();
+    renderDashboardWaitingList();
+    renderAnalyticsSummary();
+    updateKioskStats();
+    
+    alert('시연용 샘플 데이터 11건이 생성되었습니다!');
+}
+
+function deleteSampleData() {
+    const originalLength = AppState.waitingList.length;
+    AppState.waitingList = AppState.waitingList.filter(entry => !entry.isSample);
+    const deletedCount = originalLength - AppState.waitingList.length;
+
+    if (deletedCount === 0) {
+        alert('삭제할 샘플 데이터가 없습니다.');
+        return;
+    }
+
+    saveStateToStorage();
+    renderDashboardWaitingList();
+    renderAnalyticsSummary();
+    updateKioskStats();
+
+    alert(`총 ${deletedCount}건의 샘플 데이터가 삭제되었습니다.`);
+}
+

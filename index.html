@@ -140,7 +140,13 @@
                 <!-- ANALYTICS SUMMARY (운영 통계 섹션)                       -->
                 <!-- ======================================================= -->
                 <div class="analytics-section">
-                    <h3 class="analytics-title">📊 운영 분석 & 통계 (Analytics Summary)</h3>
+                    <div class="analytics-header">
+                        <h3 class="analytics-title" style="margin-bottom: 0;">📊 운영 분석 & 통계 (Analytics Summary)</h3>
+                        <div class="sample-actions">
+                            <button type="button" class="btn-sample-gen" onclick="generateSampleData()">⚡ 샘플 데이터 생성</button>
+                            <button type="button" class="btn-sample-del" onclick="deleteSampleData()">🗑️ 샘플 데이터 삭제</button>
+                        </div>
+                    </div>
                     <div class="analytics-grid">
                         <!-- 카드 1: 노쇼 및 취소 비율 -->
                         <div class="analytics-card">
